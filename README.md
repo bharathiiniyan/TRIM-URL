@@ -18,15 +18,15 @@ click count, visit history, and daily trends through a clean,
 responsive dashboard interface.
 
  **Core Features**
-Authentication — Secure user signup and login with JWT
-URL Shortening— Convert any long URL into a unique short link
-Custom Alias— Set your own custom short code
-Dashboard— View and manage all your shortened URLs
-Copy to Clipboard— One-click copy of short URL
-Delete URL— Remove any shortened link instantly
-Analytics— Track total clicks, last visited time, visit history
-Redirect— Short URL redirects to original URL server-side
-URL Validation— Invalid URLs are rejected with error messages
-Responsive UI— Works on mobile and desktop
+- **Authentication** — Secure user signup and login with JWT
+- **URL Shortening** — Convert any long URL into a unique short link
+- **Custom Alias** — Set your own custom short code
+- **Dashboard** — View and manage all your shortened URLs
+- **Copy to Clipboard** — One-click copy of short URL
+- **Delete URL** — Remove any shortened link instantly
+- **Analytics** — Track total clicks, last visited time, visit history
+- **Redirect** — Short URL redirects to original URL server-side
+- **URL Validation** — Invalid URLs are rejected with error messages
+- **Responsive UI** — Works on mobile and desktop
 
 
