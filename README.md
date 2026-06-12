@@ -2,20 +2,19 @@
 
 This project is a part of a hackathon run by [Katomaran](https://katomaran.com).
 
----
 
-## 📖 Project Overview & Objective
+##  Project Overview & Objective
 
-### 🔍 Overview
+###  Overview
 TRIM URL is a full-stack URL shortener application built with React, Node.js, and MongoDB that allows authenticated users to instantly convert long URLs into clean, shareable short links. Each link is tracked with real-time analytics including total clicks, last visited time, and full visit history. Users can manage all their links from a personal dashboard with options to copy, delete, and view detailed performance insights. The platform also supports bonus features like custom aliases, expiry dates, QR code generation, and daily click trend charts. Built for a hackathon, it demonstrates practical full-stack engineering across authentication, database modeling, REST APIs, and responsive UI design.
 
-### 🎯 Objective
+###  Objective
 To build a secure, scalable full-stack URL shortener application that enables users to easily shorten links, set custom expiration gates/aliases, generate QR codes, and monitor visitor traffic via a rich analytics dashboard.
 
 ---
 
 
-## 🏗️ System Architecture
+##  System Architecture
 
 Below is the high-level representation of data flow and service communication:
 
@@ -42,7 +41,7 @@ Below is the high-level representation of data flow and service communication:
 
 ---
 
-## ✨ Features Implemented
+##  Features Implemented
 
 1. **JWT Authentication**: Full registration and login cycle with secure `bcryptjs` password hashing and token caching in `localStorage`.
 2. **URL Shortening**: Accepts destination URLs with custom alias configurations and calendar-selected expiry dates.
@@ -62,7 +61,7 @@ Below is the high-level representation of data flow and service communication:
 
 ---
 
-## 🛠️ Step-by-Step Setup Guide
+## Step-by-Step Setup Guide
 
 ### Prerequisites
 - **Node.js** (v18 or higher recommended)
@@ -119,7 +118,7 @@ Below is the high-level representation of data flow and service communication:
 
 ---
 
-## 📝 Assumptions Made
+## Assumptions Made
 
 1. **MongoDB Connection**: It is assumed that MongoDB is running locally on port `27017` with no authentication required, or that the developer will update `server/.env` to point to a MongoDB Atlas URI if using a cloud database.
 2. **Dynamic Host Resolutions**: The short links generated in the database are returned using the current request context protocol and host (`req.protocol` + `req.get('host')`) to automatically handle both localhost dev servers and cloud server deployments.
@@ -127,7 +126,7 @@ Below is the high-level representation of data flow and service communication:
 
 ---
 
-## 📑 AI Planning Document
+## Planning Document
 
 Here is a log of each feature block and how it was planned and executed:
 
@@ -155,13 +154,10 @@ Here is a log of each feature block and how it was planned and executed:
 - **Implementation**: Designed a client-side CSV parser that processes file uploads and sends a payload list to a new bulk-creation API endpoint.
 - **Usage**: Click **Bulk Shorten (CSV)** on the dashboard, choose/drag a `.csv` file (using standard headers or order position), review the parse list in the preview table, and submit to generate short codes for all rows in a single batch.
 
----
 
-This project is a part of a hackathon run by https://katomaran.com
-
----
-
-## 📹 Video Walkthrough Placeholder
+##  Video Walkthrough Placeholder
 
 [Click here to view the video demonstration of TrimURL](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 *(Replace this with your actual Loom/YouTube hackathon demonstration link)*
+
+This project is a part of a hackathon run by https://katomaran.com
