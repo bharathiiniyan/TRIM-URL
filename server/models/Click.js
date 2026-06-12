@@ -31,6 +31,18 @@ const clickSchema = new mongoose.Schema({
   device: {
     type: String,
     default: 'Desktop'
+  },
+  country: {
+    type: String,
+    default: 'unknown'
+  },
+  countryCode: {
+    type: String,
+    default: 'unknown'
+  },
+  city: {
+    type: String,
+    default: 'unknown'
   }
 });
 

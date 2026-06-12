@@ -1,7 +1,7 @@
 import express from 'express';
-import { createShortUrl, getUserUrls, deleteUrl } from '../controllers/urlController.js';
+import { createShortUrl, getUserUrls, deleteUrl, updateUrl, bulkCreateUrls } from '../controllers/urlController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
-import { validateUrl } from '../middleware/validators.js';
+import { validateUrl, validateUrlUpdate } from '../middleware/validators.js';
 
 const router = express.Router();
 
@@ -17,4 +17,11 @@ router.get('/', getUserUrls);
 // DELETE /api/urls/:id - Delete a URL
 router.delete('/:id', deleteUrl);
 
+// PUT /api/urls/:id - Update destination URL
+router.put('/:id', validateUrlUpdate, updateUrl);
+
+// POST /api/urls/bulk - Bulk create shortened URLs
+router.post('/bulk', bulkCreateUrls);
+
 export default router;
+

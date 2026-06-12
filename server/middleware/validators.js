@@ -62,3 +62,13 @@ export const validateUrl = [
     }),
   handleValidationErrors
 ];
+
+// URL Update Validation Rules
+export const validateUrlUpdate = [
+  body('longUrl')
+    .trim()
+    .notEmpty().withMessage('Long URL is required')
+    .isURL({ require_protocol: true }).withMessage('Please enter a valid URL with HTTP/HTTPS protocol'),
+  handleValidationErrors
+];
+

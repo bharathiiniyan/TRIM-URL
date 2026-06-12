@@ -145,6 +145,20 @@ Here is a log of each feature block and how it was planned and executed:
 | **Step 10: Utility Extras** | QR canvases + custom notifications | Coded `QRModal` utilizing `qrcode` to draw codes on canvas nodes and trigger PNG downloads. Developed `ToastContext` to manage stackable custom notices. |
 | **Step 11: Polish** | Visual adjustments & loaders | Polished layout responsiveness, set up animated card hover glow effects, added scrollbar styling, and integrated Skeleton screens. |
 
+### 3. Newly Added Hackathon Features (Bonus Tasks)
+
+#### A. Edit Destination URL
+- **Implementation**: Authorized users can now dynamically change the target destination (`longUrl`) of any shortened link directly from their dashboard.
+- **Usage**: Click the **Pencil (Edit)** button on any URL card to open an inline input field, modify the target, and save. The redirect will automatically route users to the updated URL.
+
+#### B. Bulk URL Shortening via CSV
+- **Implementation**: Designed a client-side CSV parser that processes file uploads and sends a payload list to a new bulk-creation API endpoint.
+- **Usage**: Click **Bulk Shorten (CSV)** on the dashboard, choose/drag a `.csv` file (using standard headers or order position), review the parse list in the preview table, and submit to generate short codes for all rows in a single batch.
+
+---
+
+This project is a part of a hackathon run by https://katomaran.com
+
 ---
 
 ## 📹 Video Walkthrough Placeholder

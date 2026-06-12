@@ -1,13 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
-import { Copy, Check, BarChart3, QrCode, Trash2, Calendar, Clock, ExternalLink, HelpCircle } from 'lucide-react';
+import { Copy, Check, BarChart3, QrCode, Trash2, Calendar, Clock, ExternalLink, HelpCircle, Pencil } from 'lucide-react';
+import api from '../api/api';
 
-const URLCard = ({ url, onDelete, onOpenQR }) => {
+const URLCard = ({ url, onDelete, onOpenQR, onUpdate }) => {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedLongUrl, setEditedLongUrl] = useState(url.longUrl);
+  const [saveLoading, setSaveLoading] = useState(false);
+
+  const handleSaveEdit = async () => {
+    if (!editedLongUrl) {
+      showToast('Long URL is required', 'error');
+      return;
+    }
+    setSaveLoading(true);
+    try {
+      const response = await api.put(`/api/urls/${url.id}`, { longUrl: editedLongUrl });
+      showToast('Destination URL updated successfully', 'success');
+      setIsEditing(false);
+      if (onUpdate) {
+        onUpdate(response.data.url);
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || error.response?.data?.errors?.[0]?.message || 'Failed to update URL';
+      showToast(errorMsg, 'error');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -54,18 +79,52 @@ const URLCard = ({ url, onDelete, onOpenQR }) => {
 
       {/* Main Info */}
       <div className="space-y-4">
-        {/* original URL (truncated) */}
+        {/* original URL (truncated or edit form) */}
         <div className="max-w-[85%]">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">Original URL</span>
-          <div className="relative group/tooltip">
-            <p className="text-sm text-foreground/80 font-medium truncate max-w-xs sm:max-w-sm md:max-w-md lg:max-w-xs">
-              {url.longUrl}
-            </p>
-            {/* Tooltip */}
-            <div className="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block bg-slate-900 dark:bg-slate-950 text-white text-xs rounded-xl p-3 shadow-xl max-w-sm break-all z-20 transition-all duration-200">
-              {url.longUrl}
+          {isEditing ? (
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">Edit Original URL</span>
+              <input
+                type="url"
+                required
+                value={editedLongUrl}
+                onChange={(e) => setEditedLongUrl(e.target.value)}
+                className="w-full border border-border bg-background px-3 py-1.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-foreground font-medium"
+                placeholder="https://example.com"
+              />
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={saveLoading}
+                  className="px-2.5 py-1 bg-primary text-primary-foreground rounded-lg text-[10px] font-semibold hover:bg-primary/95 transition-colors disabled:opacity-50"
+                >
+                  {saveLoading ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditedLongUrl(url.longUrl);
+                  }}
+                  className="px-2.5 py-1 border border-border bg-card text-muted-foreground rounded-lg text-[10px] font-semibold hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">Original URL</span>
+              <div className="relative group/tooltip">
+                <p className="text-sm text-foreground/80 font-medium truncate max-w-xs sm:max-w-sm md:max-w-md lg:max-w-xs">
+                  {url.longUrl}
+                </p>
+                {/* Tooltip */}
+                <div className="absolute left-0 bottom-full mb-2 hidden group-hover/tooltip:block bg-slate-900 dark:bg-slate-950 text-white text-xs rounded-xl p-3 shadow-xl max-w-sm break-all z-20 transition-all duration-200">
+                  {url.longUrl}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Shortened URL */}
@@ -122,6 +181,18 @@ const URLCard = ({ url, onDelete, onOpenQR }) => {
               title="QR Code"
             >
               <QrCode className="h-4 w-4" />
+            </button>
+
+            {/* Edit Button */}
+            <button
+              onClick={() => {
+                setIsEditing(!isEditing);
+                setEditedLongUrl(url.longUrl);
+              }}
+              className={`p-2 rounded-xl border border-border hover:bg-muted transition-all shadow-sm ${isEditing ? 'text-primary border-primary/45 bg-primary/5' : 'text-muted-foreground hover:text-foreground'}`}
+              title="Edit Destination URL"
+            >
+              <Pencil className="h-4 w-4" />
             </button>
 
             {/* View Analytics */}

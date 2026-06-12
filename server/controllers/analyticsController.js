@@ -32,7 +32,7 @@ export const getUrlAnalytics = async (req, res) => {
     const recentVisits = await Click.find({ urlId })
       .sort({ timestamp: -1 })
       .limit(10)
-      .select('timestamp ip browser os device');
+      .select('timestamp ip browser os device country countryCode city');
 
     // 4. Daily click trend for the last 30 days
     const last30Days = new Date();
@@ -91,6 +91,36 @@ export const getUrlAnalytics = async (req, res) => {
       { $sort: { count: -1 } }
     ]);
 
+    // 8. Country distribution aggregation
+    const countryDist = await Click.aggregate([
+      { $match: { urlId: new mongoose.Types.ObjectId(urlId) } },
+      {
+        $group: {
+          _id: {
+            country: { $ifNull: ['$country', 'Unknown'] },
+            countryCode: { $ifNull: ['$countryCode', 'Unknown'] }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    // 9. City distribution aggregation
+    const cityDist = await Click.aggregate([
+      { $match: { urlId: new mongoose.Types.ObjectId(urlId) } },
+      {
+        $group: {
+          _id: {
+            city: { $ifNull: ['$city', 'Unknown'] },
+            countryCode: { $ifNull: ['$countryCode', 'Unknown'] }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
     res.json({
       totalClicks,
       lastVisited,
@@ -99,7 +129,17 @@ export const getUrlAnalytics = async (req, res) => {
       distributions: {
         browsers: browserDist.map(item => ({ name: item._id, value: item.count })),
         devices: deviceDist.map(item => ({ name: item._id, value: item.count })),
-        os: osDist.map(item => ({ name: item._id, value: item.count }))
+        os: osDist.map(item => ({ name: item._id, value: item.count })),
+        countries: countryDist.map(item => ({
+          name: item._id.country,
+          code: item._id.countryCode,
+          value: item.count
+        })),
+        cities: cityDist.map(item => ({
+          name: item._id.city,
+          countryCode: item._id.countryCode,
+          value: item.count
+        }))
       }
     });
   } catch (error) {

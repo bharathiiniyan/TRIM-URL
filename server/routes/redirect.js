@@ -3,6 +3,45 @@ import rateLimit from 'express-rate-limit';
 import Url from '../models/Url.js';
 import Click from '../models/Click.js';
 import useragent from 'useragent';
+import geoip from 'geoip-lite';
+
+const COUNTRY_MAP = {
+  'US': 'United States',
+  'IN': 'India',
+  'GB': 'United Kingdom',
+  'DE': 'Germany',
+  'FR': 'France',
+  'CA': 'Canada',
+  'AU': 'Australia',
+  'BR': 'Brazil',
+  'JP': 'Japan',
+  'CN': 'China',
+  'RU': 'Russia',
+  'ZA': 'South Africa',
+  'MX': 'Mexico',
+  'IT': 'Italy',
+  'ES': 'Spain',
+  'NL': 'Netherlands',
+  'SG': 'Singapore',
+  'AE': 'United Arab Emirates',
+  'NZ': 'New Zealand',
+  'CH': 'Switzerland',
+  'SE': 'Sweden',
+  'NO': 'Norway',
+  'DK': 'Denmark',
+  'FI': 'Finland',
+  'IE': 'Ireland',
+  'BE': 'Belgium',
+  'AT': 'Austria',
+  'PT': 'Portugal',
+  'KR': 'South Korea',
+  'HK': 'Hong Kong'
+};
+
+function getCountryName(code) {
+  return COUNTRY_MAP[code] || code;
+}
+
 
 const router = express.Router();
 
@@ -43,8 +82,35 @@ router.get('/:shortCode', redirectLimiter, async (req, res) => {
       device = 'Tablet';
     }
 
-    // Extract client IP address
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    // Extract client IP address (supporting sim_ip query param for local dev testing)
+    let clientIp = req.query.sim_ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+
+    // Parse the client IP if it contains a list of proxies (Client, Proxy1, Proxy2)
+    if (clientIp.includes(',')) {
+      clientIp = clientIp.split(',')[0].trim();
+    }
+    // Clean up IPv6 mapped IPv4 address
+    if (clientIp.startsWith('::ffff:')) {
+      clientIp = clientIp.substring(7);
+    }
+
+    // Geolocation lookup
+    let country = 'Unknown';
+    let countryCode = 'Unknown';
+    let city = 'Unknown';
+
+    if (clientIp && clientIp !== '127.0.0.1' && clientIp !== '::1' && clientIp !== 'unknown') {
+      const geo = geoip.lookup(clientIp);
+      if (geo) {
+        countryCode = geo.country || 'Unknown';
+        country = getCountryName(countryCode);
+        city = geo.city || 'Unknown';
+      }
+    } else {
+      country = 'Local / Test';
+      countryCode = 'LCL';
+      city = 'Localhost';
+    }
 
     // Log the click analytics record
     const click = new Click({
@@ -53,7 +119,10 @@ router.get('/:shortCode', redirectLimiter, async (req, res) => {
       userAgent: uaString,
       browser: agent.family || 'unknown',
       os: agent.os.family || 'unknown',
-      device
+      device,
+      country,
+      countryCode,
+      city
     });
 
     // Save click record and increment url clicks count in parallel

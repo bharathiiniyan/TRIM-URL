@@ -155,3 +155,10 @@
 .shine-hover:hover::after {
   left: 130%;
 }
+
+/* Fix select option dropdown visibility in dark mode */
+select option {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+

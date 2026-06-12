@@ -125,3 +125,141 @@ export const deleteUrl = async (req, res) => {
     res.status(500).json({ error: 'Server error during URL deletion' });
   }
 };
+
+// @desc    Update a shortened URL destination
+// @route   PUT /api/urls/:id
+// @access  Private
+export const updateUrl = async (req, res) => {
+  const { id } = req.params;
+  const { longUrl } = req.body;
+  const userId = req.user.userId;
+
+  try {
+    const url = await Url.findOne({ _id: id, userId });
+    if (!url) {
+      return res.status(404).json({ error: 'URL not found or unauthorized' });
+    }
+
+    url.longUrl = longUrl.trim();
+    await url.save();
+
+    res.json({
+      message: 'URL updated successfully',
+      url: {
+        id: url._id,
+        longUrl: url.longUrl,
+        shortCode: url.shortCode,
+        customAlias: url.customAlias,
+        clicksCount: url.clicksCount,
+        expiryDate: url.expiryDate,
+        createdAt: url.createdAt,
+        shortUrl: `${req.protocol}://${req.get('host')}/r/${url.shortCode}`
+      }
+    });
+  } catch (error) {
+    console.error('Update URL Error:', error);
+    res.status(500).json({ error: 'Server error during URL update' });
+  }
+};
+
+// @desc    Bulk create shortened URLs
+// @route   POST /api/urls/bulk
+// @access  Private
+export const bulkCreateUrls = async (req, res) => {
+  const { urls } = req.body;
+  const userId = req.user.userId;
+
+  if (!urls || !Array.isArray(urls)) {
+    return res.status(400).json({ error: 'Invalid input: urls must be an array' });
+  }
+
+  try {
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < urls.length; i++) {
+      const entry = urls[i];
+      let { longUrl, customAlias, expiryDate } = entry;
+
+      if (!longUrl) {
+        errors.push({ index: i, error: 'URL is required' });
+        continue;
+      }
+
+      try {
+        const urlObj = new URL(longUrl);
+        if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+          errors.push({ index: i, url: longUrl, error: 'Only HTTP/HTTPS protocol allowed' });
+          continue;
+        }
+      } catch (err) {
+        errors.push({ index: i, url: longUrl, error: 'Invalid URL format' });
+        continue;
+      }
+
+      let shortCode;
+      if (customAlias) {
+        const aliasLower = customAlias.trim();
+        const existingUrl = await Url.findOne({
+          $or: [
+            { shortCode: aliasLower },
+            { customAlias: aliasLower }
+          ]
+        });
+
+        if (existingUrl) {
+          errors.push({ index: i, url: longUrl, error: `Custom alias '${aliasLower}' is already in use` });
+          continue;
+        }
+        shortCode = aliasLower;
+      } else {
+        let isUnique = false;
+        while (!isUnique) {
+          shortCode = nanoid(6);
+          const codeExists = await Url.findOne({ shortCode });
+          if (!codeExists) {
+            isUnique = true;
+          }
+        }
+      }
+
+      const parsedExpiry = expiryDate ? new Date(expiryDate) : null;
+      if (parsedExpiry && parsedExpiry <= new Date()) {
+        errors.push({ index: i, url: longUrl, error: 'Expiry date must be in the future' });
+        continue;
+      }
+
+      const newUrl = new Url({
+        userId,
+        longUrl: longUrl.trim(),
+        shortCode,
+        customAlias: customAlias ? customAlias.trim() : undefined,
+        expiryDate: parsedExpiry
+      });
+
+      await newUrl.save();
+      results.push({
+        id: newUrl._id,
+        longUrl: newUrl.longUrl,
+        shortCode: newUrl.shortCode,
+        customAlias: newUrl.customAlias,
+        clicksCount: newUrl.clicksCount,
+        expiryDate: newUrl.expiryDate,
+        createdAt: newUrl.createdAt,
+        shortUrl: `${req.protocol}://${req.get('host')}/r/${shortCode}`
+      });
+    }
+
+    res.status(201).json({
+      message: `Successfully processed ${results.length} URLs.`,
+      successCount: results.length,
+      errorCount: errors.length,
+      urls: results,
+      errors
+    });
+  } catch (error) {
+    console.error('Bulk Create URL Error:', error);
+    res.status(500).json({ error: 'Server error during bulk URL creation' });
+  }
+};
+

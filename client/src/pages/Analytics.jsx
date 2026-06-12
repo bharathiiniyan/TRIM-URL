@@ -3,11 +3,25 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/api';
 import { useToast } from '../context/ToastContext';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
-import { ArrowLeft, BarChart3, Globe, Laptop, Monitor, Calendar, Share2, Clipboard, QrCode } from 'lucide-react';
+import { ArrowLeft, BarChart3, Globe, Laptop, Monitor, Calendar, Share2, Clipboard, QrCode, MapPin } from 'lucide-react';
 import QRModal from '../components/QRModal';
 
 // Colors for Pie Charts
 const CHART_COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#6366f1'];
+
+// Helper to convert 2-letter country code to flag emoji
+const getFlagEmoji = (countryCode) => {
+  if (!countryCode || countryCode === 'Unknown' || countryCode === 'LCL') return '📍';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  try {
+    return String.fromCodePoint(...codePoints);
+  } catch (e) {
+    return '📍';
+  }
+};
 
 const Analytics = () => {
   const { id } = useParams();
@@ -329,6 +343,85 @@ const Analytics = () => {
         </div>
       </div>
 
+      {/* Geolocation Analytics Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+        {/* Countries Dist */}
+        <div className="bg-card border border-border p-6 rounded-3xl shadow-sm flex flex-col">
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-6 flex items-center space-x-1.5 border-b border-border/40 pb-3">
+            <Globe className="h-4.5 w-4.5 text-primary" />
+            <span>Top Countries</span>
+          </h3>
+          <div className="space-y-4 flex-1">
+            {data.distributions.countries && data.distributions.countries.length > 0 ? (
+              data.distributions.countries.slice(0, 6).map((item, idx) => {
+                const percentage = data.totalClicks > 0 ? Math.round((item.value / data.totalClicks) * 100) : 0;
+                return (
+                  <div key={item.code || idx} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="flex items-center space-x-2 text-foreground">
+                        <span className="text-base leading-none">{getFlagEmoji(item.code)}</span>
+                        <span>{item.name}</span>
+                      </span>
+                      <span className="text-muted-foreground text-[11px]">
+                        <span className="font-extrabold text-foreground">{item.value}</span> ({percentage}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted/40 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-primary h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+                No country data recorded.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Cities Dist */}
+        <div className="bg-card border border-border p-6 rounded-3xl shadow-sm flex flex-col">
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-6 flex items-center space-x-1.5 border-b border-border/40 pb-3">
+            <MapPin className="h-4.5 w-4.5 text-emerald-500" />
+            <span>Top Cities</span>
+          </h3>
+          <div className="space-y-4 flex-1">
+            {data.distributions.cities && data.distributions.cities.length > 0 ? (
+              data.distributions.cities.slice(0, 6).map((item, idx) => {
+                const percentage = data.totalClicks > 0 ? Math.round((item.value / data.totalClicks) * 100) : 0;
+                return (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-xs font-semibold">
+                      <span className="flex items-center space-x-2 text-foreground">
+                        <span className="text-base leading-none">{getFlagEmoji(item.countryCode)}</span>
+                        <span>{item.name}</span>
+                      </span>
+                      <span className="text-muted-foreground text-[11px]">
+                        <span className="font-extrabold text-foreground">{item.value}</span> ({percentage}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted/40 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+                No city data recorded.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Visitor Click History Logs */}
       <div className="bg-card border border-border rounded-3xl shadow-md overflow-hidden relative z-10">
         <div className="px-6 py-4 border-b border-border bg-muted/40">
@@ -341,6 +434,7 @@ const Analytics = () => {
                 <tr>
                   <th className="px-6 py-3.5">Timestamp</th>
                   <th className="px-6 py-3.5">IP Address</th>
+                  <th className="px-6 py-3.5">Location</th>
                   <th className="px-6 py-3.5">OS</th>
                   <th className="px-6 py-3.5">Browser</th>
                   <th className="px-6 py-3.5">Device</th>
@@ -353,6 +447,10 @@ const Analytics = () => {
                       {formatDate(click.timestamp)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-foreground">{click.ip}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-foreground font-semibold flex items-center space-x-1.5">
+                      <span className="text-base">{getFlagEmoji(click.countryCode)}</span>
+                      <span>{click.city !== 'Unknown' ? `${click.city}, ` : ''}{click.countryCode || click.country || 'Unknown'}</span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">{click.os}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{click.browser}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
