@@ -157,7 +157,6 @@ Here is a log of each feature block and how it was planned and executed:
 
 ##  Video Walkthrough Placeholder
 
-[Click here to view the video demonstration of TrimURL](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-*(Replace this with your actual Loom/YouTube hackathon demonstration link)*
+[Click here to view the video demonstration of TrimURL](https://youtu.be/Afele988hdw?si=8Hsdzk0bTO53hi4n)
 
 This project is a part of a hackathon run by https://katomaran.com
